@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دستیار هوشمند ره نگار گستر</title>
+    <style>
+        /* ============================================
+           استایل‌های پایه و متغیرها
+           ============================================ */
+        :root {
+            --primary-color: #ED2F42;
+            --primary-dark: #c91f31;
+            --primary-light: #fef2f3;
+            --secondary-color: #2d2d2d;
+            --background-color: #f5f5f5;
+            --surface-color: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b6b6b;
+            --border-color: #e0e0e0;
+            --error-color: #ED2F42;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* ============================================
+           فونت وزیر متن
+           ============================================ */
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+        }
+
+        @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+        /* ============================================
+           کانتینر اصلی چت
+           ============================================ */
+        .chat-container {
+            width: 100%;
+            max-width: 450px;
+            height: 700px;
+            max-height: 90vh;
+            background: var(--surface-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ============================================
+           هدر چت
+           ============================================ */
+        .chat-header {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+        }
+
+        .chat-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .header-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            opacity: 0.85;
+            color: #b0b0b0;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ============================================
+           ناحیه پیام‌ها
+           ============================================ */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
+            scroll-behavior: smooth;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #d0d0d0;
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #b0b0b0;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            line-height: 1.7;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.bot .message-content {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-top-right-radius: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message.user .message-content {
+            background: var(--primary-color);
+            color: white;
+            border-top-left-radius: 4px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-align: left;
+        }
+
+        .message.user .message-time {
+            color: rgba(255,255,255,0.8);
+            text-align: right;
+        }
+
+        /* ============================================
+           نشانگر تایپ کردن
+           ============================================ */
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: var(--surface-color);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            width: fit-content;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .typing-indicator.show {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        /* ============================================
+           پیام خوش‌آمدگویی
+           ============================================ */
+        .welcome-message {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .welcome-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .welcome-text {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .quick-action {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .quick-action:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .quick-action:active {
+            transform: translateY(0);
+        }
+
+        /* ============================================
+           ناحیه ورودی
+           ============================================ */
+        .input-container {
+            padding: 15px 20px;
+            background: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            max-height: 120px;
+            min-height: 48px;
+            transition: var(--transition);
+            outline: none;
+            background: var(--surface-color);
+            color: var(--text-primary);
+        }
+
+        .message-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(237, 47, 66, 0.1);
+        }
+
+        .message-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-button {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(237, 47, 66, 0.3);
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .send-button:disabled {
+            background: #d0d0d0;
+            cursor: not-allowed;
+        }
+
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+            transform: rotate(180deg);
+        }
+
+        /* ============================================
+           فوتر
+           ============================================ */
+        .chat-footer {
+            padding: 10px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: #fafafa;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .chat-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .chat-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ============================================
+           مودال نام کاربر
+           ============================================ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--surface-color);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: var(--transition);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .modal-text {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: inherit;
+            margin-bottom: 15px;
+            text-align: center;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .modal-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(237, 47, 66, 0.1);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+
+        .modal-btn.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(237, 47, 66, 0.3);
+        }
+
+        .modal-btn.secondary {
+            background: #f5f5f5;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-btn.secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ============================================
+           پاسخگو بودن - Tablet
+           ============================================ */
+        @media (max-width: 768px) {
+            .chat-container {
+                max-width: 100%;
+                height: 650px;
+            }
+
+            .header-title {
+                font-size: 16px;
+            }
+
+            .header-subtitle {
+                font-size: 12px;
+            }
+
+            .status-indicator {
+                font-size: 11px;
+            }
+
+            .welcome-message {
+                padding: 20px 15px;
+            }
+
+            .welcome-title {
+                font-size: 16px;
+            }
+
+            .welcome-text {
+                font-size: 13px;
+            }
+
+            .quick-action {
+                font-size: 12px;
+                padding: 7px 14px;
+            }
+        }
+
+        /* ============================================
+           پاسخگو بودن - Mobile
+           ============================================ */
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .chat-header {
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .avatar {
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
+            }
+
+            .header-title {
+                font-size: 15px;
+            }
+
+            .header-subtitle {
+                font-size: 11px;
+            }
+
+            .status-indicator {
+                display: none;
+            }
+
+            .messages-container {
+                padding: 15px;
+            }
+
+            .message-content {
+                max-width: 85%;
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            .message-time {
+                font-size: 10px;
+            }
+
+            .welcome-message {
+                padding: 20px 10px;
+            }
+
+            .welcome-icon {
+                font-size: 40px;
+            }
+
+            .welcome-title {
+                font-size: 15px;
+            }
+
+            .welcome-text {
+                font-size: 12px;
+            }
+
+            .quick-actions {
+                gap: 6px;
+            }
+
+            .quick-action {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+
+            .input-container {
+                padding: 12px 15px;
+            }
+
+            .input-wrapper {
+                gap: 8px;
+            }
+
+            .message-input {
+                font-size: 13px;
+                padding: 10px 14px;
+                min-height: 44px;
+            }
+
+            .send-button {
+                width: 44px;
+                height: 44px;
+            }
+
+            .send-button svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .chat-footer {
+                padding: 8px;
+                font-size: 10px;
+            }
+
+            .modal {
+                padding: 25px 20px;
+                margin: 0 10px;
+            }
+
+            .modal-icon {
+                font-size: 40px;
+            }
+
+            .modal-title {
+                font-size: 18px;
+            }
+
+            .modal-text {
+                font-size: 13px;
+            }
+
+            .modal-input {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            .modal-btn {
+                font-size: 13px;
+                padding: 10px;
+            }
+        }
+
+        /* ============================================
+           پاسخگو بودن - Small Mobile
+           ============================================ */
+        @media (max-width: 360px) {
+            .header-title {
+                font-size: 14px;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+
+            .quick-action {
+                font-size: 10px;
+                padding: 5px 10px;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+            }
+        }
+
+        /* ============================================
+           بهبود Landscape Mode در موبایل
+           ============================================ */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .chat-container {
+                height: 100vh;
+            }
+
+            .chat-header {
+                padding: 10px 15px;
+            }
+
+            .avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .header-subtitle {
+                display: none;
+            }
+
+            .messages-container {
+                padding: 10px 15px;
+            }
+
+            .welcome-message {
+                padding: 15px 10px;
+            }
+
+            .welcome-icon {
+                font-size: 32px;
+                margin-bottom: 10px;
+            }
+
+            .input-container {
+                padding: 8px 15px;
+            }
+
+            .chat-footer {
+                display: none;
+            }
+        }
+    
+        /* ========================================== */
+        /* استایل Modal تماس با ما */
+        /* ========================================== */
+
+        .contact-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .contact-modal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideInDown 0.3s ease;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .contact-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+        }
+
+        .contact-modal-header h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .contact-close {
+            position: absolute;
+            top: 20px;
+            left: 25px;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            line-height: 1;
+        }
+
+        .contact-close:hover {
+            transform: scale(1.2);
+        }
+
+        .contact-modal-body {
+            padding: 25px;
+        }
+
+        .phone-numbers-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .phone-numbers-box h3 {
+            color: #667eea;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .phone-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 15px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .phone-item span {
+            margin: 0 8px;
+        }
+
+        .contact-form-group {
+            margin-bottom: 20px;
+        }
+
+        .contact-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .contact-form-group input,
+        .contact-form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .contact-form-group input:focus,
+        .contact-form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .contact-form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .contact-submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .contact-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .contact-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .contact-success-message,
+        .contact-error-message {
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .contact-success-message {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .contact-error-message {
+            background-color: #f44336;
+            color: white;
+        }
+
+        /* دکمه تماس در header */
+        .contact-header-btn {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .contact-header-btn:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .contact-modal-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+
+            .contact-header-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+</style>
+</head>
+<body>
+    <!-- مودال نام کاربر -->
+    <div class="modal-overlay" id="nameModal">
+        <div class="modal">
+            <div class="modal-icon">👋</div>
+            <h2 class="modal-title">خوش آمدید!</h2>
+            <p class="modal-text">لطفاً نام خود را وارد کنید تا بتوانیم بهتر به شما خدمت کنیم.</p>
+            <input type="text" class="modal-input" id="nameInput" placeholder="نام شما...">
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="saveName()">شروع گفتگو</button>
+                <button class="modal-btn secondary" onclick="skipName()">بعداً</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- کانتینر اصلی چت -->
+    
+    <!-- Modal تماس با ما -->
+    <div id="contactModal" class="contact-modal">
+        <div class="contact-modal-content">
+            <div class="contact-modal-header">
+                <span class="contact-close" onclick="closeContactModal()">&times;</span>
+                <h2>📞 تماس با ره نگار گستر</h2>
+            </div>
+            <div class="contact-modal-body">
+                <!-- شماره تماس‌ها -->
+                <div class="phone-numbers-box">
+                    <h3>📱 شماره‌های تماس:</h3>
+                    <div class="phone-item">
+                        📞 <span>021-12345678</span> (فروش)
+                    </div>
+                    <div class="phone-item">
+                        ☎️ <span>021-87654321</span> (پشتیبانی)
+                    </div>
+                    <div class="phone-item">
+                        💬 <span>09123456789</span> (واتساپ)
+                    </div>
+                </div>
+
+                <!-- فرم تماس -->
+                <form id="contactForm" onsubmit="submitContactForm(event)">
+                    <div class="contact-form-group">
+                        <label for="contactName">نام و نام خانوادگی: *</label>
+                        <input 
+                            type="text" 
+                            id="contactName" 
+                            name="name" 
+                            required 
+                            placeholder="مثال: علی احمدی"
+                            minlength="2"
+                        >
+                    </div>
+
+                    <div class="contact-form-group">
+                        <label for="contactPhone">شماره تماس: *</label>
+                        <input 
+                            type="tel" 
+                            id="contactPhone" 
+                            name="phone" 
+                            required 
+                            placeholder="09123456789"
+                            pattern="[0-9]{11}"
+                            title="لطفاً شماره تلفن 11 رقمی وارد کنید"
+                        >
+                    </div>
+
+                    <div class="contact-form-group">
+                        <label for="contactMessage">پیام شما:</label>
+                        <textarea 
+                            id="contactMessage" 
+                            name="message" 
+                            placeholder="لطفاً درخواست خود را بنویسید..."
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="contact-submit-btn" id="contactSubmitBtn">
+                        ارسال درخواست تماس
+                    </button>
+                </form>
+
+                <div class="contact-success-message" id="contactSuccessMessage">
+                    ✅ درخواست شما با موفقیت ارسال شد! به زودی با شما تماس خواهیم گرفت.
+                </div>
+
+                <div class="contact-error-message" id="contactErrorMessage">
+                    ❌ خطا در ارسال درخواست. لطفاً مجدداً تلاش کنید.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <!-- هدر -->
+        <div class="chat-header">
+            <button class="contact-header-btn" onclick="openContactModal()">📞 تماس با ما</button>
+            <div class="avatar">🤖</div>
+            <div class="header-info">
+                <div class="header-title">دستیار هوشمند ره نگار گستر</div>
+                <div class="header-subtitle">مشاور فروش و پشتیبانی</div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>آنلاین</span>
+            </div>
+        </div>
+
+        <!-- ناحیه پیام‌ها -->
+        <div class="messages-container" id="messagesContainer">
+            <!-- پیام خوش‌آمدگویی -->
+            <div class="welcome-message" id="welcomeMessage">
+                <div class="welcome-icon">💬</div>
+                <h3 class="welcome-title">سلام! چطور می‌توانم کمکتان کنم؟</h3>
+                <p class="welcome-text">
+                    من دستیار هوشمند شرکت ره نگار گستر هستم. 
+                    می‌توانید درباره محصولات، قیمت‌ها، شرایط همکاری و خدمات ما سوال بپرسید.
+                </p>
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="sendQuickMessage('لیست محصولات و نرم‌افزارها')">📦 محصولات</button>
+                    <button class="quick-action" onclick="sendQuickMessage('قیمت نرم‌افزارها چقدر است؟')">💰 قیمت‌ها</button>
+                    <button class="quick-action" onclick="sendQuickMessage('شرایط همکاری و نمایندگی')">🤝 همکاری</button>
+                    <button class="quick-action" onclick="sendQuickMessage('اطلاعات تماس شرکت')">📞 تماس</button>
+                </div>
+            </div>
+
+            <!-- نشانگر تایپ کردن -->
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <!-- ناحیه ورودی -->
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="پیام خود را بنویسید..."
+                    rows="1"
+                ></textarea>
+                <button class="send-button" id="sendButton" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- فوتر -->
+        <div class="chat-footer">
+            طراحی شده توسط <a href="#">ره نگار گستر</a> | نسخه ۱.۰
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // تنظیمات و متغیرها
+        // ============================================
+        
+        // آدرس وب‌هوک n8n - این را با آدرس واقعی جایگزین کنید
+        const WEBHOOK_URL = 'https://rgbot.n8nsaz.ir/webhook/chat-webhook';
+        
+        // المان‌های DOM
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const nameModal = document.getElementById('nameModal');
+        const nameInput = document.getElementById('nameInput');
+
+        // ============================================
+        // مدیریت سشن
+        // ============================================
+        
+        // تولید UUID برای Session ID
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // دریافت یا ایجاد Session ID
+        function getSessionId() {
+            let sessionId = sessionStorage.getItem('chatSessionId');
+            if (!sessionId) {
+                sessionId = generateUUID();
+                sessionStorage.setItem('chatSessionId', sessionId);
+            }
+            return sessionId;
+        }
+
+        // دریافت نام کاربر
+        function getUserName() {
+            return sessionStorage.getItem('userName') || '';
+        }
+
+        // ذخیره نام کاربر
+        function setUserName(name) {
+            sessionStorage.setItem('userName', name);
+        }
+
+        // دریافت تاریخچه پیام‌ها
+        function getMessageHistory() {
+            const history = sessionStorage.getItem('messageHistory');
+            return history ? JSON.parse(history) : [];
+        }
+
+        // ذخیره تاریخچه پیام‌ها
+        function saveMessageHistory(messages) {
+            // حداکثر ۱۰ پیام آخر را نگه می‌داریم
+            const recentMessages = messages.slice(-10);
+            sessionStorage.setItem('messageHistory', JSON.stringify(recentMessages));
+        }
+
+        // ============================================
+        // مدیریت UI
+        // ============================================
+        
+        // نمایش یا مخفی کردن المان خوش‌آمدگویی
+        function hideWelcomeMessage() {
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+        }
+
+        // فرمت کردن زمان
+        function formatTime(date) {
+            return new Intl.DateTimeFormat('fa-IR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+
+        // اضافه کردن پیام به UI
+        function addMessage(content, isUser = false) {
+            hideWelcomeMessage();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const now = new Date();
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${escapeHtml(content)}
+                    <div class="message-time">${formatTime(now)}</div>
+                </div>
+            `;
+            
+            // اضافه کردن قبل از نشانگر تایپ
+            messagesContainer.insertBefore(messageDiv, typingIndicator);
+            
+            // اسکرول به پایین
+            scrollToBottom();
+            
+            // ذخیره در تاریخچه
+            const history = getMessageHistory();
+            history.push({
+                content,
+                isUser,
+                timestamp: now.toISOString()
+            });
+            saveMessageHistory(history);
+        }
+
+        // اسکپ کردن HTML برای جلوگیری از XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        // اسکرول به پایین
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100);
+        }
+
+        // نمایش نشانگر تایپ
+        function showTyping() {
+            typingIndicator.classList.add('show');
+            scrollToBottom();
+        }
+
+        // مخفی کردن نشانگر تایپ
+        function hideTyping() {
+            typingIndicator.classList.remove('show');
+        }
+
+        // غیرفعال/فعال کردن ورودی
+        function setInputEnabled(enabled) {
+            messageInput.disabled = !enabled;
+            sendButton.disabled = !enabled;
+        }
+
+        // ============================================
+        // ارسال پیام
+        // ============================================
+        
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+            
+            // پاک کردن ورودی
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // اضافه کردن پیام کاربر به UI
+            addMessage(message, true);
+            
+            // نمایش نشانگر تایپ
+            showTyping();
+            setInputEnabled(false);
+            
+            try {
+                // ارسال به وب‌هوک
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        sessionId: getSessionId(),
+                        userName: getUserName(),
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // مخفی کردن نشانگر تایپ
+                hideTyping();
+                
+                // نمایش پاسخ
+                if (data.success && data.response) {
+                    addMessage(data.response, false);
+                } else {
+                    addMessage('متأسفانه خطایی رخ داده است. لطفاً دوباره تلاش کنید.', false);
+                }
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                hideTyping();
+                addMessage('متأسفانه در برقراری ارتباط مشکلی پیش آمده. لطفاً اتصال اینترنت خود را بررسی کنید.', false);
+            } finally {
+                setInputEnabled(true);
+                messageInput.focus();
+            }
+        }
+
+        // ارسال پیام سریع
+        function sendQuickMessage(message) {
+            messageInput.value = message;
+            sendMessage();
+        }
+
+        // ============================================
+        // مدیریت مودال نام
+        // ============================================
+        
+        function showNameModal() {
+            // فقط اگر نام ذخیره نشده باشد نمایش بده
+            if (!getUserName()) {
+                setTimeout(() => {
+                    nameModal.classList.add('show');
+                    nameInput.focus();
+                }, 500);
+            }
+        }
+
+        function saveName() {
+            const name = nameInput.value.trim();
+            if (name) {
+                setUserName(name);
+            }
+            nameModal.classList.remove('show');
+        }
+
+        function skipName() {
+            nameModal.classList.remove('show');
+        }
+
+        // ============================================
+        // مدیریت رویدادها
+        // ============================================
+        
+        // ارسال با Enter
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // تنظیم خودکار ارتفاع textarea
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
+        });
+
+        // بستن مودال با کلیک بیرون
+        nameModal.addEventListener('click', (e) => {
+            if (e.target === nameModal) {
+                nameModal.classList.remove('show');
+            }
+        });
+
+        // ارسال نام با Enter
+        nameInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveName();
+            }
+        });
+
+        // ============================================
+        // بارگذاری تاریخچه پیام‌ها
+        // ============================================
+        
+        function loadMessageHistory() {
+            const history = getMessageHistory();
+            if (history.length > 0) {
+                hideWelcomeMessage();
+                history.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${msg.isUser ? 'user' : 'bot'}`;
+                    messageDiv.innerHTML = `
+                        <div class="message-content">
+                            ${escapeHtml(msg.content)}
+                            <div class="message-time">${formatTime(new Date(msg.timestamp))}</div>
+                        </div>
+                    `;
+                    messagesContainer.insertBefore(messageDiv, typingIndicator);
+                });
+                scrollToBottom();
+            }
+        }
+
+        // ============================================
+        // اینیشیالایز
+        // ============================================
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // بارگذاری تاریخچه
+            loadMessageHistory();
+            
+            // نمایش مودال نام (اختیاری)
+            showNameModal();
+            
+            // فوکوس روی ورودی
+            messageInput.focus();
+            
+            // اطمینان از وجود Session ID
+            getSessionId();
+        });
+
+        // پاکسازی سشن وقتی صفحه بسته می‌شود (اختیاری)
+        // window.addEventListener('beforeunload', () => {
+        //     sessionStorage.clear();
+        // });
+    
+        // ============================================
+        // مدیریت Modal تماس با ما
+        // ============================================
+
+        // URL Webhook برای فرم تماس (باید توی n8n تنظیم بشه)
+        const CONTACT_WEBHOOK_URL = 'https://rgbot.n8nsaz.ir/webhook/contact-request';
+
+        // باز کردن Modal تماس
+        function openContactModal() {
+            const modal = document.getElementById('contactModal');
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            // اگر نام کاربر موجود باشد، در فرم قرار بده
+            const savedName = getUserName();
+            if (savedName) {
+                document.getElementById('contactName').value = savedName;
+            }
+        }
+
+        // بستن Modal تماس
+        function closeContactModal() {
+            const modal = document.getElementById('contactModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+
+            // Reset form
+            document.getElementById('contactForm').reset();
+            document.getElementById('contactSuccessMessage').style.display = 'none';
+            document.getElementById('contactErrorMessage').style.display = 'none';
+        }
+
+        // بستن Modal با کلیک روی پس‌زمینه
+        window.onclick = function(event) {
+            const modal = document.getElementById('contactModal');
+            if (event.target === modal) {
+                closeContactModal();
+            }
+        }
+
+        // ارسال فرم تماس
+        async function submitContactForm(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('contactSubmitBtn');
+            const successMsg = document.getElementById('contactSuccessMessage');
+            const errorMsg = document.getElementById('contactErrorMessage');
+
+            // دریافت داده‌های فرم
+            const formData = {
+                name: document.getElementById('contactName').value.trim(),
+                phone: document.getElementById('contactPhone').value.trim(),
+                message: document.getElementById('contactMessage').value.trim() || 'درخواست تماس',
+                timestamp: new Date().toISOString(),
+                sessionId: getSessionId()
+            };
+
+            // غیرفعال کردن دکمه
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'در حال ارسال...';
+
+            try {
+                const response = await fetch(CONTACT_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    // نمایش پیام موفقیت
+                    successMsg.style.display = 'block';
+                    errorMsg.style.display = 'none';
+                    document.getElementById('contactForm').reset();
+
+                    // بستن Modal بعد از 3 ثانیه
+                    setTimeout(() => {
+                        closeContactModal();
+                    }, 3000);
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'ارسال درخواست تماس';
+            }
+        }
+
+        // تشخیص خودکار درخواست تماس در پیام‌ها
+        function detectContactIntent(message) {
+            const contactKeywords = [
+                'تماس',
+                'میخوام تماس',
+                'میخوام تماس بگیرم',
+                'زنگ بزن',
+                'زنگ بزنید',
+                'شماره',
+                'تلفن',
+                'کال',
+                'call',
+                'فرم تماس',
+                'درخواست تماس'
+            ];
+
+            const messageLower = message.toLowerCase();
+            return contactKeywords.some(keyword => messageLower.includes(keyword));
+        }
+
+
+    </script>
+</body>
+</html>
